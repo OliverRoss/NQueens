@@ -4,12 +4,10 @@
 
 // ------------------------------------------------------------------------------------------ Getters
 
-Matrix* get_matrix(int num_queens)
+Matrix* get_matrix(int num_primaries, int num_secondaries)
 {
-	int num_primaries   = 2 * num_queens;
-	int num_secondaries = 2 * (2 * num_queens - 3);
-	int num_columns     = num_primaries + num_secondaries;
-	Matrix* matrix      = malloc(sizeof(Matrix));
+	int num_columns = num_primaries + num_secondaries;
+	Matrix* matrix  = malloc(sizeof(Matrix));
 	if (!matrix)
 		return NULL;
 	matrix->num_columns = num_columns;
@@ -135,8 +133,17 @@ int search(Matrix* matrix, int solutions)
 }
 
 // Add constraint rows to existing matrix
-static void add_constraints(int constraints[], int length, Matrix* matrix)
+void add_constraints(struct constraint* constraint_row, Matrix* matrix)
 {
+	int length       = constraint_row->length;
+	int* constraints = constraint_row->array;
+
+	// Sanity check if now invalid columns are passed
+	for (int i = 0; i < length; i++) {
+		if (constraints[i] > matrix->num_columns)
+			return;
+	}
+
 	Node* first    = malloc(sizeof(Node));
 	Node* current  = first;
 	Node* next     = NULL;
@@ -165,66 +172,7 @@ static void add_constraints(int constraints[], int length, Matrix* matrix)
 	}
 }
 
-struct constraint {
-	int* array;
-	int length;
-};
-
-// Get constraints for queen on field (x,y) with size 'size'
-static struct constraint get_constraints(int x, int y, int size)
+int algorithm_x(Matrix* matrix)
 {
-	struct constraint constraint;
-	constraint.length = 4;
-	int row           = x;
-	int col           = y + size;
-	int diagonal      = x + y + (2 * size - 1);
-	int rev_diag      = (size - 1 - x + y) + (4 * size - 4);
-
-	bool drop_diagonal = (diagonal <= (2 * size - 1) || diagonal > 4 * size - 4);
-	bool drop_rev      = (rev_diag < (4 * size - 3) || rev_diag > (6 * size - 7));
-
-	if (drop_rev) {
-		constraint.length--;
-	}
-	if (drop_diagonal) {
-		constraint.length--;
-	}
-
-	constraint.array    = malloc(sizeof(int) * constraint.length);
-	constraint.array[0] = row;
-	constraint.array[1] = col;
-
-	if (drop_rev) {
-		if (!drop_diagonal)
-			constraint.array[2] = diagonal;
-	} else {
-		if (drop_diagonal) {
-			constraint.array[2] = rev_diag;
-		} else {
-			constraint.array[2] = diagonal;
-			constraint.array[3] = rev_diag;
-		}
-	}
-	return constraint;
-}
-
-// Add all relevant constraints to the matrix
-void init_matrix(Matrix* matrix, int num_queens)
-{
-	for (int i = 0; i < num_queens; i++) {
-		for (int j = 0; j < num_queens; j++) {
-			struct constraint constraint = get_constraints(i, j, num_queens);
-			add_constraints(constraint.array, constraint.length, matrix);
-			free(constraint.array);
-		}
-	}
-}
-
-int algo_x(int num_queens)
-{
-	Matrix* matrix = get_matrix(num_queens);
-	init_matrix(matrix, num_queens);
-	int solutions = search(matrix, 0);
-	destroy_matrix(matrix);
-	return solutions;
+	return search(matrix, 0);
 }

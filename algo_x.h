@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+// A small library that implements Knuth's algorithm X with dancing links
+
 // ------------------------------------------------------------------------------------------  Data structures
 
 struct node {
@@ -32,12 +34,23 @@ typedef struct matrix Matrix;
 
 // ------------------------------------------------------------------------------------------  Getters
 
-Matrix* get_matrix(int num_queens);
+Matrix* get_matrix(int num_primaries, int num_secondaries);
 
 void destroy_matrix(Matrix* matrix);
 
+// ------------------------------------------------------------------------------------------ Construct matrix
+
+// Use this struct to add constraints to the matrix. It corresponds to adding a row to the matrix.
+// The integers in the array denote the column that should have a '1' in that particular row.
+struct constraint {
+	int* array;
+	int length;
+};
+
+void add_constraints(struct constraint* constraint_row, Matrix* matrix);
+
 // ------------------------------------------------------------------------------------------  Algo X
 
-int algo_x(int num_queens);
+int algorithm_x(Matrix* matrix);
 
 #endif // ALGO_X_H
